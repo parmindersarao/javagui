@@ -9,21 +9,27 @@ public class st_database {
     private static void crateC() throws Exception{
         Class.forName("com.mysql.cj.jdbc.Driver");
         con = DriverManager.getConnection("jdbc:mysql://localhost:3306/studentManagement", "root", "sarao341983");
-
-
     }
-    public static void showalldata() throws Exception{
+    public static User fetchdata(int roll_no) throws Exception{
         crateC();
-        String q= "select * from students;";
-        Statement stmt = con.createStatement();
-        ResultSet set = stmt.executeQuery(q);
-        while(set.next()){
-            String name=set.getString("Name");
-            System.out.println(name);
+        String q= "select * from students where sroll_no=?;";
+        PreparedStatement preparedStatement = con.prepareStatement(q);
+        preparedStatement.setInt(1, roll_no);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next()) {
+            user = new User();
+            user.name = resultSet.getString("sname");
+            user.roll_no = resultSet.getInt("sroll_no");
+            user.phone = resultSet.getString("sphone");
+            user.address = resultSet.getString("scity");
+            user.course= resultSet.getString("scourse");
         }
+        preparedStatement.close();
         con.close();
+        return user;
     }
-    public static boolean InsertStudent(String name,String phone, String course,int roll_no, String city){
+    public static boolean InsertStudent(String name,int roll_no,String phone,String city,String course){
         boolean check=false;
         
         try{
@@ -50,9 +56,10 @@ public class st_database {
         boolean check=false;
         try{
             crateC();
-            String q="delete from stundents where sroll_no=?";
+            String q="delete from students where sroll_no=?;";
             PreparedStatement pstmt =con.prepareStatement(q);
             pstmt.setInt(1, roll_no);
+            pstmt.executeUpdate();
             check=true;
             con.close();
         }
@@ -67,6 +74,7 @@ public class st_database {
         con.close();
     }
     public static User getAuthenticatedUser(String phone, int password) {  
+        
         try{
             crateC();
             String q = "SELECT * FROM students WHERE sphone=? AND sroll_no=?";
@@ -82,40 +90,37 @@ public class st_database {
                 user.roll_no = resultSet.getInt("sroll_no");
                 user.phone = resultSet.getString("sphone");
                 user.address = resultSet.getString("scity");
+                user.course= resultSet.getString("scourse");
             }
             preparedStatement.close();
             con.close();
+  
         }catch(Exception e){
             System.out.println("Database connexion failed!");
             e.printStackTrace();
         }
-
-
         return user;
     }
-    public static User getAuthenticatedAdmin(String username, String password) {
+    public static boolean getAuthenticatedAdmin(String username, String password) {
+        boolean check=false;
         try{
             crateC();
-            String q = "SELECT * FROM students WHERE sphone=? AND sroll_no=?";
+            String q = "SELECT * FROM adminLogin WHERE username=? AND username=?";
             PreparedStatement preparedStatement = con.prepareStatement(q);
             preparedStatement.setString(1, username);
             preparedStatement.setString(2, password);
-
             ResultSet resultSet = preparedStatement.executeQuery();
-
             if (resultSet.next()) {
-                user = new User();
-                user.name = resultSet.getString("username");
+               check=true;    
             }
-            preparedStatement.close();
+            preparedStatement.close(); 
             con.close();
         }catch(Exception e){
-            System.out.println("Database connexion failed!");
+            System.out.println("Database connection failed!");
             e.printStackTrace();
         }
-
-
-        return user;
+        System.out.println(check);
+        return check;
     }
 
 }
